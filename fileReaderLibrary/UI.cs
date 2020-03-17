@@ -51,12 +51,16 @@ namespace fileReaderLibrary
 
             System.Console.WriteLine("Select extension: ");
             System.Console.WriteLine("(1) TXT [.txt]");
+            System.Console.WriteLine("(2) XML [.xml]");
             string response = System.Console.ReadLine();
 
             switch (response)
             {
                 case "1":
                     fileExtension = ".txt";
+                    break;
+                case "2":
+                    fileExtension = ".xml";
                     break;
                 default:
                     System.Console.WriteLine();

@@ -5,7 +5,7 @@ namespace fileReaderLibrary
 {
     public class FileValidator
     {
-        public static List<string> ValidFileExtensions = new List<string> {".txt"};
+        public static List<string> ValidFileExtensions = new List<string> {".txt", ".xml"};
 
         public static bool CheckTypeSupported(string fileExtension)
         {
