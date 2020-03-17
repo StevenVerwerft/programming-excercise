@@ -5,18 +5,20 @@ namespace fileReaderLibrary
 {
     public class UI
     {
-
-        public void AskUserInput()
+        private string filePath;
+        private string fileExtension;
+        public Context AskUserInput()
         {
-            string filePath = this.AskFilePath();
-            string fileExtension = this.AskExtension(filePath);
+            this.AskFilePath();  // sets and validates filePath
+            this.AskExtension();  // sets and validates fileExtension
+
+            return new Context(this.filePath, this.fileExtension);
         }
         public bool AskReadAnotherFile()
         {
             return this.AskYesNo("Read another file?");
         }
-
-        private string AskFilePath()
+        private void AskFilePath()
         {
             bool isValidFile;
             string filePath;
@@ -25,10 +27,10 @@ namespace fileReaderLibrary
             filePath = System.Console.ReadLine();
             isValidFile = FileValidator.CheckFileExists(filePath);
 
-            // begin recursion
             if ( isValidFile)
             {
-                return filePath;
+                this.filePath = filePath;
+                return;
             }
             else
             {
@@ -39,13 +41,11 @@ namespace fileReaderLibrary
                 {
                     this.StopApplication();
                 }
-                return this.AskFilePath();
+                this.AskFilePath();
             }
         }
-
-        private string AskExtension(string filePath)
+        private void AskExtension()
         {
-            bool isSupportedExtension;
             bool isMatchingExtension;
             string fileExtension;
 
@@ -66,16 +66,16 @@ namespace fileReaderLibrary
                     {
                         this.StopApplication();
                     }
-                    return this.AskExtension(filePath);
+                    this.AskExtension();
+                    return; 
             }
-            
             // validate the extension
-            isMatchingExtension = FileValidator.MatchFileFileExtension(filePath, fileExtension);
+            isMatchingExtension = FileValidator.MatchFileFileExtension(this.filePath, fileExtension);
 
-            // base case recursion
             if (isMatchingExtension)
             {
-                return fileExtension;
+                this.fileExtension = fileExtension;
+                return;
             }
             else
             {   
@@ -90,19 +90,17 @@ namespace fileReaderLibrary
                 }
                 if (this.AskYesNo("New file? "))
                 {
-                    filePath = this.AskFilePath();
+                    this.AskFilePath();
                 }
-                return this.AskExtension(filePath);
+                this.AskExtension();
             }
         }
-
         private bool AskYesNo(string question)
         {
             System.Console.WriteLine(question + " (y/n)");
             string response = System.Console.ReadLine().ToLower().Trim();
             return (response == "y" | response == "yes");
         }
-
         private void StopApplication()
         {
             System.Environment.Exit(1);
