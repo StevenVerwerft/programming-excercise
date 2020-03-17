@@ -11,5 +11,10 @@ namespace fileReaderLibrary
         {
             return ValidFileExtensions.Contains(fileExtension);
         }
+
+        public static bool CheckFileExists(string fileName)
+        {
+            return System.IO.File.Exists(fileName);
+        }
     }
 }
