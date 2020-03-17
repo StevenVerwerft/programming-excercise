@@ -44,7 +44,7 @@ namespace fileReaderLibrary
         }
         private bool AskYesNo(string question)
         {
-            System.Console.WriteLine(question + "(y/n)");
+            System.Console.WriteLine(question + " (y/n)");
             string response = System.Console.ReadLine().ToLower().Trim();
             return (response == "y" | response == "yes");
         }
