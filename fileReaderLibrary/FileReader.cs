@@ -14,6 +14,7 @@ namespace fileReaderLibrary
         public void DisplayContent()
         {
             this.GetFileContent();
+            System.Console.Clear();
             System.Console.WriteLine(this.FileContent);
         }
         private void GetFileContent()
