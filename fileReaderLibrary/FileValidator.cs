@@ -16,5 +16,10 @@ namespace fileReaderLibrary
         {
             return System.IO.File.Exists(fileName);
         }
+
+        public static bool MatchFileFileExtension(string fileName, string fileExtension)
+        {
+            return System.IO.Path.GetExtension(fileName) == fileExtension;
+        }
     }
 }

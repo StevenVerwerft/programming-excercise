@@ -5,43 +5,85 @@ namespace fileReaderLibrary
 {
     public class UI
     {
+
         public void AskUserInput()
         {
             string filePath = this.AskFilePath();
-            string fileExtension = this.AskFileExtension();
+            string fileExtension = this.AskExtension(filePath);
         }
-
         public bool AskReadAnotherFile()
         {
             return this.AskYesNo("Read another file?");
         }
+
         private string AskFilePath()
         {
-            // todo: check if works on windows...
+            bool isValidFile;
             string filePath;
-            bool fileExists = false;
-            do
+
+            System.Console.WriteLine("File path: ");
+            filePath = System.Console.ReadLine();
+            isValidFile = FileValidator.CheckFileExists(filePath);
+
+            // begin recursion
+            if ( isValidFile)
             {
-                System.Console.WriteLine("path to file:");
-                filePath = System.Console.ReadLine();
-                fileExists = this.CheckFileExists(filePath);
-                if (! fileExists)
+                return filePath;
+            }
+            else
+            {
+                System.Console.WriteLine();
+                System.Console.WriteLine($"[Error]");
+                System.Console.WriteLine("File does not exist");
+                if (! this.AskYesNo("Try another file? "))
                 {
-                    System.Console.WriteLine("File does not exist");
-                    this.AskTryAgain();
+                    this.StopApplication();
                 }
-            } while (! this.CheckFileExists(filePath));
-            
-            return filePath;
+                return this.AskFilePath();
+            }
         }
 
-        private string AskFileExtension()
+        private string AskExtension(string filePath)
         {
+            bool isSupportedExtension;
+            bool isMatchingExtension;
             string fileExtension;
-            System.Console.WriteLine("file extension:");
+
+            System.Console.WriteLine("Extension: ");
             fileExtension = System.Console.ReadLine();
-            return fileExtension;
+
+            // validate the extension
+            isSupportedExtension = FileValidator.CheckTypeSupported(fileExtension);
+            isMatchingExtension = FileValidator.MatchFileFileExtension(filePath, fileExtension);
+
+            // base case recursion
+            if (isSupportedExtension & isMatchingExtension)
+            {
+                return fileExtension;
+            }
+            else
+            {   
+                System.Console.WriteLine($"[Error]");
+                if (! isSupportedExtension)
+                {
+                    System.Console.WriteLine($"Application does not support {fileExtension}.");
+                }
+                if (! isMatchingExtension)
+                {
+                    System.Console.WriteLine($"File type does not match given extension {fileExtension}");
+                }
+                if (! this.AskYesNo("Try again? "))
+                {
+                    this.StopApplication();
+                }
+                if (this.AskYesNo("New file? "))
+                {
+                    filePath = this.AskFilePath();
+                }
+                return this.AskExtension(filePath);
+            }
         }
+
         private bool AskYesNo(string question)
         {
             System.Console.WriteLine(question + " (y/n)");
@@ -49,30 +91,9 @@ namespace fileReaderLibrary
             return (response == "y" | response == "yes");
         }
 
-        private bool CheckFileExists(string filePath)
+        private void StopApplication()
         {
-            return System.IO.File.Exists(filePath);
-        }
-
-        private void AskTryAgain()
-        {
-            System.Console.WriteLine("Try Again? (y/n)");
-            string response = System.Console.ReadLine().ToLower().Trim();
-            if (response == "n" | response == "no")
-            {
-                System.Environment.Exit(1);
-            }
-        }
-
-        private void AskToContinue()
-        {
-            System.Console.WriteLine("continue? (y/n)");
-            string response = System.Console.ReadLine().ToLower().Trim();
-            if (response == "n" | response == "no")
-            {
-                System.Environment.Exit(1);
-            }
-
+            System.Environment.Exit(1);
         }
     }
 }
