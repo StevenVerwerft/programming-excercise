@@ -49,25 +49,37 @@ namespace fileReaderLibrary
             bool isMatchingExtension;
             string fileExtension;
 
-            System.Console.WriteLine("Extension: ");
-            fileExtension = System.Console.ReadLine();
+            System.Console.WriteLine("Select extension: ");
+            System.Console.WriteLine("(1) TXT [.txt]");
+            string response = System.Console.ReadLine();
 
+            switch (response)
+            {
+                case "1":
+                    fileExtension = ".txt";
+                    break;
+                default:
+                    System.Console.WriteLine();
+                    System.Console.WriteLine("[Error]");
+                    System.Console.WriteLine("Invalid Choice.");
+                    if (! this.AskYesNo("Choose Again?"))
+                    {
+                        this.StopApplication();
+                    }
+                    return this.AskExtension(filePath);
+            }
+            
             // validate the extension
-            isSupportedExtension = FileValidator.CheckTypeSupported(fileExtension);
             isMatchingExtension = FileValidator.MatchFileFileExtension(filePath, fileExtension);
 
             // base case recursion
-            if (isSupportedExtension & isMatchingExtension)
+            if (isMatchingExtension)
             {
                 return fileExtension;
             }
             else
             {   
                 System.Console.WriteLine($"[Error]");
-                if (! isSupportedExtension)
-                {
-                    System.Console.WriteLine($"Application does not support {fileExtension}.");
-                }
                 if (! isMatchingExtension)
                 {
                     System.Console.WriteLine($"File type does not match given extension {fileExtension}");
