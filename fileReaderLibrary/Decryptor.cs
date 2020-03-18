@@ -2,7 +2,7 @@ using System;
 
 namespace fileReaderLibrary
 {
-    interface IDecryptor
+    public interface IDecryptor
     {
         string Decrypt(string fileContent);
     }

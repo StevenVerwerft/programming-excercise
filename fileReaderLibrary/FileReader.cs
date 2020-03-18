@@ -5,11 +5,11 @@ namespace fileReaderLibrary
     public class FileReader
     {
         private string FileContent { get; set; }
-        private Context context { get; set;}
+        private Context Context { get; set;}
 
         public FileReader(Context context)
         {
-            this.context = context;
+            this.Context = context;
         }
         public void DisplayContent()
         {
@@ -19,11 +19,15 @@ namespace fileReaderLibrary
         }
         private void GetFileContent()
         {
-            this.FileContent = System.IO.File.ReadAllText(this.context.File.FileName);
+            this.FileContent = System.IO.File.ReadAllText(this.Context.File.FileName);
+            if (this.Context.File.IsEncrypted)
+            {
+                this.FileContent = this.DecryptFileContent();
+            }
         }
-        private void DecryptFileContent()
+        private string DecryptFileContent()
         {
-            
+            return this.Context.ApplicationDecryptor.Decrypt(this.FileContent);
         }
     }
 }

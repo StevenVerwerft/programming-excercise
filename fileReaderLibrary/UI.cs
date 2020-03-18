@@ -8,10 +8,16 @@ namespace fileReaderLibrary
         private string filePath;
         private string fileExtension;
         private bool isEncrypted;
+        public void PopulateContext(Context applicationContext)
+        {
+            this.SetUserInput();
+            File currentFile = new File(this.filePath, this.fileExtension, this.isEncrypted);
+            applicationContext.File = currentFile;
+        }
         public Context AskUserInput()
         {
             this.SetUserInput();
-            return new Context(this.filePath, this.fileExtension);
+            return new Context(this.filePath, this.fileExtension, this.isEncrypted);
         }
         private void SetUserInput()
         {
@@ -122,7 +128,7 @@ namespace fileReaderLibrary
             }
             else
             {
-                System.Console.WriteLine("[ERROR");
+                System.Console.WriteLine("[ERROR]");
                 System.Console.WriteLine($"Encryption not supported for file of type ({this.fileExtension}).");
                 if (this.AskYesNo("Continue without encryption?"))
                 {
