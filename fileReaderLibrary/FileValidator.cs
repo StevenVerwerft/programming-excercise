@@ -6,7 +6,7 @@ namespace fileReaderLibrary
     public class FileValidator
     {
         public static List<string> ValidFileExtensions = new List<string> {".txt", ".xml"};
-        public static List<string> EncryptedFileExtensions = new List<string> {".txt"};
+        public static List<string> EncryptedFileExtensions = new List<string> {".txt", ".xml"};
         public static List<string> RoleBasedSecuredFileExtensions = new List<string> { ".xml"};
         public static bool CheckTypeSupported(string fileExtension)
         {
