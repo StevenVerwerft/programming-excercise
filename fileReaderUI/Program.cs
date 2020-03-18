@@ -17,8 +17,8 @@ namespace fileReaderUI
             do
             {   
                 // contains meta information about file and user
-                UserInterface.AddUserInfoToContext(ApplicationContext);
-                               
+                UserInterface.AddUserInfoToContext();
+
                 // handles opening file and displaying content to the console
                 FileReader ApplicationFileReader = new FileReader(ApplicationContext);
                 ApplicationFileReader.DisplayContent();
