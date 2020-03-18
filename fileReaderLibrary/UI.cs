@@ -8,22 +8,30 @@ namespace fileReaderLibrary
         private string filePath;
         private string fileExtension;
         private bool isEncrypted;
-        public void PopulateContext(Context applicationContext)
+        private bool isRoleSecured;
+        private IRole Role;
+        private Context applicationContext;
+
+        public UI(Context applicationContext)
         {
-            this.SetUserInput();
-            File currentFile = new File(this.filePath, this.fileExtension, this.isEncrypted);
-            applicationContext.File = currentFile;
+            this.applicationContext = applicationContext;
         }
-        public Context AskUserInput()
+        public void AddUserInfoToContext()
         {
             this.SetUserInput();
-            return new Context(this.filePath, this.fileExtension, this.isEncrypted);
+            File currentFile = new File(this.filePath, this.fileExtension, this.isEncrypted, this.isRoleSecured);
+            this.applicationContext.File = currentFile;
+            if (this.isRoleSecured)
+            {
+                this.applicationContext.Role = this.Role;
+            }
         }
         private void SetUserInput()
         {
             this.AskFilePath();  // sets and validates filePath
             this.AskExtension();  // sets and validates fileExtension
             this.AskEncryption();  // sets and validates isEncrypted
+            this.AskRole(); // sets and validates role based secury
         }
         public bool AskReadAnotherFile()
         {
@@ -149,6 +157,57 @@ namespace fileReaderLibrary
                 }
             }
         }
+        private void AskRole()
+        {
+            IRole role;
+            bool isRoleSecured = this.AskYesNo("Use role based security?");
+            bool roleBasedSecuritySupported;
+
+            if (isRoleSecured)
+            {
+                // check if current file type supports role based security
+                roleBasedSecuritySupported = FileValidator.CheckRoleBasedSecuritySupported(this.fileExtension);    
+                if (roleBasedSecuritySupported)
+                {
+                    // ask for the role
+                    System.Console.WriteLine("choose a role:");
+                    int i = 0;
+                    foreach (IRole accessRole in this.applicationContext.ApplicationAuthorizer.AvailableRoles)
+                    {
+                        System.Console.WriteLine($"({i+1}) {accessRole.RoleName}");
+                    }
+                    try
+                    {
+                        string response = System.Console.ReadLine();
+                        int roleID = Int16.Parse(response);
+                        role = this.applicationContext.ApplicationAuthorizer.AvailableRoles[roleID - 1];
+                        this.Role = role;
+                    }
+                    catch (System.Exception)
+                    {
+                        System.Console.WriteLine("[ERROR]");
+                        System.Console.WriteLine($"Invalid response");
+                        if (this.AskTryAgain())  // stops application of answer is no
+                        {
+                            this.AskRole();
+                        }                        
+                    }
+                }
+                else
+                {
+                    System.Console.WriteLine($"Role based security is not allowed for the file type {this.fileExtension}.");
+                    if (this.AskYesNo("Try other role?"))
+                    {
+                        this.AskRole();
+                    }
+                    else
+                    {
+                        this.AskStartOver();  // stops application if answer is no
+                    }
+                }
+            }
+
+        }
         private bool AskYesNo(string question)
         {
             System.Console.WriteLine(question + " (y/n)");
@@ -167,6 +226,34 @@ namespace fileReaderLibrary
         private void StopApplication()
         {
             System.Environment.Exit(1);
+        }
+
+        private bool AskTryAgain()
+        {
+            
+            if( this.AskYesNo("Try Again?"))
+            {
+                return true;
+            }
+            else
+            {
+                this.StopApplication();
+                return false;
+            }
+        }
+
+        private bool AskStartOver()
+        {
+            if( this.AskYesNo("Start over?"))
+            {
+                this.SetUserInput();
+                return true;
+            }
+            else
+            {
+                this.StopApplication();
+                return false;
+            }
         }
     }
 }

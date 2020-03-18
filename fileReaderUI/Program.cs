@@ -8,15 +8,17 @@ namespace fileReaderUI
         static void Main(string[] args)
         {
 
-            UI UserInterface = new UI();
             IDecryptor ApplicationDecryptor = new ReverseDecryptor();
+            IAuthorizer ApplicationAuthorizer = new SimpleAuthorizer();
+            Context ApplicationContext = new Context(ApplicationDecryptor, ApplicationAuthorizer);
+            UI UserInterface = new UI(ApplicationContext);
+    
             bool readAnotherFile = false;
             do
             {   
                 // contains meta information about file and user
-                Context ApplicationContext = new Context(ApplicationDecryptor);
-                UserInterface.PopulateContext(ApplicationContext);
-                               
+                UserInterface.AddUserInfoToContext();
+
                 // handles opening file and displaying content to the console
                 FileReader ApplicationFileReader = new FileReader(ApplicationContext);
                 ApplicationFileReader.DisplayContent();
