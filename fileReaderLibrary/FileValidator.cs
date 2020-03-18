@@ -7,6 +7,7 @@ namespace fileReaderLibrary
     {
         public static List<string> ValidFileExtensions = new List<string> {".txt", ".xml"};
         public static List<string> EncryptedFileExtensions = new List<string> {".txt"};
+        public static List<string> RoleBasedSecuredFileExtensions = new List<string> { ".xml"};
         public static bool CheckTypeSupported(string fileExtension)
         {
             return ValidFileExtensions.Contains(fileExtension);
@@ -14,6 +15,10 @@ namespace fileReaderLibrary
         public static bool CheckEncryptionSupported(string fileExtension)
         {
             return EncryptedFileExtensions.Contains(fileExtension);
+        }
+        public static bool CheckRoleBasedSecuritySupported(string fileExtension)
+        {
+            return RoleBasedSecuredFileExtensions.Contains(fileExtension);
         }
         public static bool CheckFileExists(string fileName)
         {
