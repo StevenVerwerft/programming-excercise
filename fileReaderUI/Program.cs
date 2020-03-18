@@ -10,11 +10,12 @@ namespace fileReaderUI
 
             UI UserInterface = new UI();
             IDecryptor ApplicationDecryptor = new ReverseDecryptor();
+            IAuthorizer ApplicationAuthorizer = new SimpleAuthorizer();
             bool readAnotherFile = false;
             do
             {   
                 // contains meta information about file and user
-                Context ApplicationContext = new Context(ApplicationDecryptor);
+                Context ApplicationContext = new Context(ApplicationDecryptor, ApplicationAuthorizer);
                 UserInterface.PopulateContext(ApplicationContext);
                                
                 // handles opening file and displaying content to the console

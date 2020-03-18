@@ -7,14 +7,17 @@ namespace fileReaderLibrary
         public File File { get; set; }
         public IDecryptor ApplicationDecryptor { get; set; }
 
+        public IAuthorizer ApplicationAuthorizer { get; set; }
+
         public Context(string fileName, string fileExtension, bool isEncrypted)
         {
             this.File = new File(fileName, fileExtension, isEncrypted);
         }
         
-        public Context(IDecryptor applicationDecryptor)
+        public Context(IDecryptor applicationDecryptor, IAuthorizer applicationAuthorizer)
         {
             this.ApplicationDecryptor = applicationDecryptor;
+            this.ApplicationAuthorizer = applicationAuthorizer;
         }
     }
 }
