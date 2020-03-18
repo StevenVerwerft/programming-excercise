@@ -118,6 +118,11 @@ namespace fileReaderLibrary
 
             isEncrypted = this.AskYesNo("File encrypted?");
             
+            if (! isEncrypted)
+            {
+                this.isEncrypted = isEncrypted;
+                return;
+            }
             // check if encrypted files are allowed for the given extension
             encryptionSupported = FileValidator.CheckEncryptionSupported(this.fileExtension);
 
