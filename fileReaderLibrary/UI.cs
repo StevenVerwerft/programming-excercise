@@ -165,6 +165,7 @@ namespace fileReaderLibrary
 
             if (isRoleSecured)
             {
+                this.isRoleSecured = isRoleSecured;
                 // check if current file type supports role based security
                 roleBasedSecuritySupported = FileValidator.CheckRoleBasedSecuritySupported(this.fileExtension);    
                 if (roleBasedSecuritySupported)
