@@ -8,7 +8,13 @@ namespace fileReaderLibrary
         private string filePath;
         private string fileExtension;
         private bool isEncrypted;
-        public void PopulateContext(Context applicationContext)
+        private Context applicationContext;
+
+        public UI(Context applicationContext)
+        {
+            this.applicationContext = applicationContext;
+        }
+        public void AddUserInfoToContext(Context applicationContext)
         {
             this.SetUserInput();
             File currentFile = new File(this.filePath, this.fileExtension, this.isEncrypted);
@@ -143,6 +149,11 @@ namespace fileReaderLibrary
                     this.StopApplication();
                 }
             }
+        }
+        private void AskRole()
+        {
+            IRole role;
+
         }
         private bool AskYesNo(string question)
         {
