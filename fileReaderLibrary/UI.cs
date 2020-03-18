@@ -72,6 +72,7 @@ namespace fileReaderLibrary
             System.Console.WriteLine("Select extension: ");
             System.Console.WriteLine("(1) TXT [.txt]");
             System.Console.WriteLine("(2) XML [.xml]");
+            System.Console.WriteLine("(3) JSON [.json]");
             string response = System.Console.ReadLine();
 
             switch (response)
@@ -81,6 +82,9 @@ namespace fileReaderLibrary
                     break;
                 case "2":
                     fileExtension = ".xml";
+                    break;
+                case "3":
+                    fileExtension = ".json";
                     break;
                 default:
                     System.Console.WriteLine();
