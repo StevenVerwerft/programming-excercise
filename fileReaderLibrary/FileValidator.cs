@@ -7,7 +7,7 @@ namespace fileReaderLibrary
     {
         public static List<string> ValidFileExtensions = new List<string> {".txt", ".xml", ".json"};
         public static List<string> EncryptedFileExtensions = new List<string> {".txt", ".xml", ".json"};
-        public static List<string> RoleBasedSecuredFileExtensions = new List<string> { ".txt", ".xml"};
+        public static List<string> RoleBasedSecuredFileExtensions = new List<string> { ".txt", ".xml", ".json"};
         public static bool CheckTypeSupported(string fileExtension)
         {
             return ValidFileExtensions.Contains(fileExtension);
