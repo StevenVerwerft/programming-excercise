@@ -176,6 +176,7 @@ namespace fileReaderLibrary
                     foreach (IRole accessRole in this.applicationContext.ApplicationAuthorizer.AvailableRoles)
                     {
                         System.Console.WriteLine($"({i+1}) {accessRole.RoleName}");
+                        i++;
                     }
                     try
                     {
