@@ -21,5 +21,9 @@ namespace fileReaderLibrary
         {
             this.FileContent = System.IO.File.ReadAllText(this.context.File.FileName);
         }
+        private void DecryptFileContent()
+        {
+            
+        }
     }
 }
