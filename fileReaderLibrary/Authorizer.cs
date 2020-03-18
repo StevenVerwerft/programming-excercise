@@ -6,7 +6,7 @@ namespace fileReaderLibrary
     public interface IAuthorizer
     {
         List<IRole> AvailableRoles { get; set; }
-        bool HasReadAccess(File file, IRole role);
+        bool HasReadAccess(string fileName, IRole role);
     }
 
     public class SimpleAuthorizer : IAuthorizer
@@ -19,10 +19,10 @@ namespace fileReaderLibrary
             }
             set {}
         }
-        public bool HasReadAccess(File file, IRole role)
+        public bool HasReadAccess(string fileName, IRole role)
         {
             // some dummy logic here
-            if (file.FileName.Contains("admin"))
+            if (fileName.Contains("admin"))
             {
                 // only admins have access
                 return (role is Admin);

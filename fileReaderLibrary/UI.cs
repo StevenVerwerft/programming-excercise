@@ -31,7 +31,8 @@ namespace fileReaderLibrary
             this.AskFilePath();  // sets and validates filePath
             this.AskExtension();  // sets and validates fileExtension
             this.AskEncryption();  // sets and validates isEncrypted
-            this.AskRole(); // sets and validates role based secury
+            this.AskRoleBasedSecurity(); // sets and validates isRoleSecured
+            this.AskRole(); // sets and validates Role
         }
         public bool AskReadAnotherFile()
         {
@@ -157,58 +158,76 @@ namespace fileReaderLibrary
                 }
             }
         }
+
+        private void AskRoleBasedSecurity()
+        {
+            bool isRoleSecured = this.AskYesNo("Use role based security?");
+            if (! isRoleSecured )
+            {
+                this.isRoleSecured = false;
+                return;
+            }
+            bool roleBasedSecuritySupported = FileValidator.CheckRoleBasedSecuritySupported(this.fileExtension);
+            if ( roleBasedSecuritySupported)
+            {
+                this.isRoleSecured = true;
+                return;
+            }
+            else
+            {
+                System.Console.WriteLine($"Role based security is not allowed for the file type {this.fileExtension}.");
+                this.AskStartOver();
+            }
+        }
+
         private void AskRole()
         {
             IRole role;
-            bool isRoleSecured = this.AskYesNo("Use role based security?");
-            bool roleBasedSecuritySupported;
 
-            if (isRoleSecured)
+            if (! this.isRoleSecured)
             {
-                this.isRoleSecured = isRoleSecured;
-                // check if current file type supports role based security
-                roleBasedSecuritySupported = FileValidator.CheckRoleBasedSecuritySupported(this.fileExtension);    
-                if (roleBasedSecuritySupported)
+                return;
+            }
+
+            System.Console.WriteLine("choose a role:");
+            int i = 0;
+            foreach (IRole accessRole in this.applicationContext.ApplicationAuthorizer.AvailableRoles)
+            {
+                System.Console.WriteLine($"({i + 1}) {accessRole.RoleName}");
+                i++;
+            }
+            try
+            {
+                string response = System.Console.ReadLine();
+                int roleID = Int16.Parse(response);
+                role = this.applicationContext.ApplicationAuthorizer.AvailableRoles[roleID - 1];
+                this.Role = role;
+            }
+            catch (System.Exception)
+            {
+                System.Console.WriteLine("[ERROR]");
+                System.Console.WriteLine($"Invalid response");
+                if (this.AskTryAgain())  // stops application of answer is no
                 {
-                    // ask for the role
-                    System.Console.WriteLine("choose a role:");
-                    int i = 0;
-                    foreach (IRole accessRole in this.applicationContext.ApplicationAuthorizer.AvailableRoles)
-                    {
-                        System.Console.WriteLine($"({i+1}) {accessRole.RoleName}");
-                        i++;
-                    }
-                    try
-                    {
-                        string response = System.Console.ReadLine();
-                        int roleID = Int16.Parse(response);
-                        role = this.applicationContext.ApplicationAuthorizer.AvailableRoles[roleID - 1];
-                        this.Role = role;
-                    }
-                    catch (System.Exception)
-                    {
-                        System.Console.WriteLine("[ERROR]");
-                        System.Console.WriteLine($"Invalid response");
-                        if (this.AskTryAgain())  // stops application of answer is no
-                        {
-                            this.AskRole();
-                        }                        
-                    }
-                }
-                else
-                {
-                    System.Console.WriteLine($"Role based security is not allowed for the file type {this.fileExtension}.");
-                    if (this.AskYesNo("Try other role?"))
-                    {
-                        this.AskRole();
-                    }
-                    else
-                    {
-                        this.AskStartOver();  // stops application if answer is no
-                    }
+                    this.AskRole();
                 }
             }
 
+            // check if the role has access to the file
+            if(! this.CheckRoleAccess())
+            {
+                System.Console.WriteLine("[ERROR]");
+                System.Console.WriteLine($"Access denied for role {this.Role.RoleName}");
+                if (this.AskTryAgain())
+                {
+                    this.AskRole();
+                }
+            }   
+        }
+
+        private bool CheckRoleAccess()
+        {
+            return this.applicationContext.ApplicationAuthorizer.HasReadAccess(this.filePath, this.Role);
         }
         private bool AskYesNo(string question)
         {
