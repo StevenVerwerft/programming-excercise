@@ -7,12 +7,17 @@ namespace fileReaderLibrary
     {
         private string filePath;
         private string fileExtension;
+        private bool isEncrypted;
         public Context AskUserInput()
+        {
+            this.SetUserInput();
+            return new Context(this.filePath, this.fileExtension);
+        }
+        private void SetUserInput()
         {
             this.AskFilePath();  // sets and validates filePath
             this.AskExtension();  // sets and validates fileExtension
-
-            return new Context(this.filePath, this.fileExtension);
+            this.AskEncryption();  // sets and validates isEncrypted
         }
         public bool AskReadAnotherFile()
         {
@@ -99,10 +104,53 @@ namespace fileReaderLibrary
                 this.AskExtension();
             }
         }
+
+        private void AskEncryption()
+        {
+            bool isEncrypted;
+            bool encryptionSupported;
+
+            isEncrypted = this.AskYesNo("File encrypted?");
+            
+            // check if encrypted files are allowed for the given extension
+            encryptionSupported = FileValidator.CheckEncryptionSupported(this.fileExtension);
+
+            if (encryptionSupported)
+            {
+                this.isEncrypted = isEncrypted;
+                return;
+            }
+            else
+            {
+                System.Console.WriteLine("[ERROR");
+                System.Console.WriteLine($"Encryption not supported for file of type ({this.fileExtension}).");
+                if (this.AskYesNo("Continue without encryption?"))
+                {
+                    this.isEncrypted = false;
+                }
+                else if (this.AskYesNo("New file?"))
+                {
+                    this.SetUserInput();
+                }
+                else
+                {
+                    this.StopApplication();
+                }
+            }
+        }
         private bool AskYesNo(string question)
         {
             System.Console.WriteLine(question + " (y/n)");
             string response = System.Console.ReadLine().ToLower().Trim();
+
+            bool isYes = (response == "y" | response == "yes");
+            bool isNo = (response == "n" | response == "no");
+            if (! (isYes | isNo))
+            {
+                System.Console.WriteLine("Unrecognized response.");
+                System.Console.WriteLine("Closing application...");
+                this.StopApplication();
+            }
             return (response == "y" | response == "yes");
         }
         private void StopApplication()
