@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-
+using fileReaderLibrary.Enums;
 namespace fileReaderLibrary
 {
     public class UI
@@ -50,7 +50,10 @@ namespace fileReaderLibrary
             string fileExtension;
 
             System.Console.WriteLine("Select extension: ");
-            System.Console.WriteLine("(1) TXT [.txt]");
+            foreach (FileExtension option in Enum.GetValues(typeof(FileExtension)))
+            {
+                System.Console.WriteLine($"({(int)option}) option");
+            }
             string response = System.Console.ReadLine();
 
             switch (response)
