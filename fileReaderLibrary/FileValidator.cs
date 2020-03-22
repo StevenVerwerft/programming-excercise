@@ -6,7 +6,7 @@ namespace fileReaderLibrary
 {
     public class FileValidator
     {   
-        private static Dictionary<FileExtension, string> FileExtensionToEnum = new Dictionary<FileExtension, string>()
+        private static Dictionary<FileExtension, string> FileExtensionToString = new Dictionary<FileExtension, string>()
         {
             {FileExtension.TXT, ".txt"},
         };
@@ -21,10 +21,14 @@ namespace fileReaderLibrary
             return System.IO.Path.GetExtension(fileName) == fileExtension;
         }
 
-        public static bool MatchFileExtension(string fileName, FileExtension fileExtension)
+        public static bool IsValidFileExtension(FileExtension fileExtension)
+        {
+            return Enum.IsDefined(typeof(FileExtension), fileExtension);
+        }
+        public static bool MatchFileFileExtension(string fileName, FileExtension fileExtension)
         {
             string extension = System.IO.Path.GetExtension(fileName);
-            return FileExtensionToEnum.TryGetValue()
+            return (FileExtensionToString[fileExtension] == extension);
         }
     }
 }

@@ -6,7 +6,7 @@ namespace fileReaderLibrary
     public class UI
     {
         private string filePath;
-        private string fileExtension;
+        private FileExtension fileExtension;
         public Context AskUserInput()
         {
             this.AskFilePath();  // sets and validates filePath
@@ -34,69 +34,105 @@ namespace fileReaderLibrary
             }
             else
             {
-                System.Console.WriteLine();
-                System.Console.WriteLine($"[Error]");
-                System.Console.WriteLine("File does not exist");
-                if (! this.AskYesNo("Try another file? "))
+                bool tryAgain = this.ErrorTryAgain("File does not exist.");
+                if (tryAgain)
+                {
+                    this.AskFilePath();
+                }
+                else
                 {
                     this.StopApplication();
                 }
-                this.AskFilePath();
             }
         }
         private void AskExtension()
         {
-            bool isMatchingExtension;
-            string fileExtension;
+            FileExtension extension;
 
             System.Console.WriteLine("Select extension: ");
             foreach (FileExtension option in Enum.GetValues(typeof(FileExtension)))
             {
-                System.Console.WriteLine($"({(int)option}) option");
+                System.Console.WriteLine($"({ (int)option }) { option }");
             }
+
             string response = System.Console.ReadLine();
+            Enum.TryParse(response, out extension);
 
-            switch (response)
+            bool isValidFileExtension = FileValidator.IsValidFileExtension(extension);
+            if (! isValidFileExtension)
             {
-                case "1":
-                    fileExtension = ".txt";
-                    break;
-                default:
-                    System.Console.WriteLine();
-                    System.Console.WriteLine("[Error]");
-                    System.Console.WriteLine("Invalid Choice.");
-                    if (! this.AskYesNo("Choose Again?"))
-                    {
-                        this.StopApplication();
-                    }
+                bool tryAgain = this.ErrorTryAgain("Extension not recognized");
+                if (tryAgain)
+                {
                     this.AskExtension();
-                    return; 
+                    return;
+                }
+                bool startOver = this.StartOver();
+                if (startOver)
+                {
+                    this.Reset();
+                    this.AskUserInput();
+                    return;
+                }
+                else
+                {
+                    this.StopApplication();
+                }
             }
-            // validate the extension
-            isMatchingExtension = FileValidator.MatchFileFileExtension(this.filePath, fileExtension);
-
+            bool isMatchingExtension = FileValidator.MatchFileFileExtension(this.filePath, extension);
             if (isMatchingExtension)
             {
-                this.fileExtension = fileExtension;
+                this.fileExtension = extension;
                 return;
             }
             else
             {   
-                System.Console.WriteLine($"[Error]");
-                if (! isMatchingExtension)
+                bool tryAgain = this.ErrorTryAgain("File does not match extension");
+                if (tryAgain)
                 {
-                    System.Console.WriteLine($"File type does not match given extension {fileExtension}");
+                    this.AskExtension();
+                    return;
                 }
-                if (! this.AskYesNo("Try again? "))
+                bool startOver = this.StartOver();
+                if (startOver)
+                {
+                    this.Reset();
+                    this.AskUserInput();
+                    return;
+                }
+                else
                 {
                     this.StopApplication();
                 }
-                if (this.AskYesNo("New file? "))
-                {
-                    this.AskFilePath();
-                }
-                this.AskExtension();
             }
+        }
+        private void Reset()
+        {
+            this.fileExtension = new FileExtension();
+            this.filePath = "";
+        }
+        private void PrintError(string errorMessage)
+        {
+            System.Console.WriteLine("[ERROR]");
+            System.Console.WriteLine(errorMessage);
+        }
+        private bool StartOver()
+        {
+            return this.AskYesNo("Start over?");
+        }
+        private bool TryAgain()
+        {
+            return this.AskYesNo("Try again");
+        }
+        private bool ErrorStartOver(string errorMessage)
+        {
+            this.PrintError(errorMessage);
+            return this.StartOver();
+        }
+        private bool ErrorTryAgain(string errorMessage)
+        {
+            this.PrintError(errorMessage);
+            return this.TryAgain();
         }
         private bool AskYesNo(string question)
         {

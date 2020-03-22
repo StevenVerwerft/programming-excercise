@@ -4,7 +4,7 @@ namespace fileReaderLibrary.Enums
 {
     public enum FileExtension
     {
-        TXT = 0,
+        TXT = 1,
 
     }
 }
