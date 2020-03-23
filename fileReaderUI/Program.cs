@@ -7,24 +7,27 @@ namespace fileReaderUI
     {
         static void Main(string[] args)
         {
+            
+            DecryptorFactory decryptorFactory = new DecryptorFactory();
+            IDecryptor applicationDecryptor = decryptorFactory.CreateDecryptor();
 
-            IDecryptor ApplicationDecryptor = new ReverseDecryptor();
-            IAuthorizer ApplicationAuthorizer = new SimpleAuthorizer();
-            Context ApplicationContext = new Context(ApplicationDecryptor, ApplicationAuthorizer);
-            UI UserInterface = new UI(ApplicationContext);
-    
+            AuthorizerFactory authorizerFactory = new AuthorizerFactory();
+            IAuthorizer applicationAuthorizer = authorizerFactory.CreateAuthorizer();
+
+            Context applicationContext = new Context(applicationDecryptor, applicationAuthorizer);
+            UI userInterface = new UI();
+
             bool readAnotherFile = false;
             do
             {   
-                // contains meta information about file and user
-                UserInterface.AddUserInfoToContext();
+                applicationContext = userInterface.AddUserInfoToContext(applicationContext);
 
                 // handles opening file and displaying content to the console
-                FileReader ApplicationFileReader = new FileReader(ApplicationContext);
+                FileReader ApplicationFileReader = new FileReader(applicationContext);
                 ApplicationFileReader.DisplayContent();
 
                 // ask user if application should read another file
-                readAnotherFile = UserInterface.AskReadAnotherFile();
+                readAnotherFile = userInterface.AskReadAnotherFile();
             
             } while (readAnotherFile);
 
