@@ -1,154 +1,224 @@
 using System;
 using System.Collections.Generic;
-
+using fileReaderLibrary.Enums;
 namespace fileReaderLibrary
 {
     public class UI
     {
-        private string filePath;
-        private string fileExtension;
-        private bool isEncrypted;
-        public void PopulateContext(Context applicationContext)
+        private bool startOver;
+        public Context PopulateContext(Context applicationContext)
         {
-            this.SetUserInput();
-            File currentFile = new File(this.filePath, this.fileExtension, this.isEncrypted);
-            applicationContext.File = currentFile;
-        }
-        public Context AskUserInput()
-        {
-            this.SetUserInput();
-            return new Context(this.filePath, this.fileExtension, this.isEncrypted);
-        }
-        private void SetUserInput()
-        {
-            this.AskFilePath();  // sets and validates filePath
-            this.AskExtension();  // sets and validates fileExtension
-            this.AskEncryption();  // sets and validates isEncrypted
+            string filePath = "";
+            FileExtension fileExtension = 0;
+            bool isEncrypted = false;
+
+            do
+            {
+                this.startOver = false;
+
+                filePath = this.AskFilePath();
+                if (this.startOver) continue;
+
+                fileExtension = this.AskExtension(filePath);
+                if (this.startOver) continue;
+
+                isEncrypted = this.AskEncryption(fileExtension);
+                if (this.startOver) continue;
+
+            } while (this.startOver);
+
+            File file = new File(filePath, fileExtension, isEncrypted);
+            applicationContext.File = file;
+            return applicationContext;
         }
         public bool AskReadAnotherFile()
         {
             return this.AskYesNo("Read another file?");
         }
-        private void AskFilePath()
+        private string AskFilePath()
         {
-            bool isValidFile;
-            string filePath;
+            bool isExistingFile = false;
+            bool tryAgain = false;
+            bool startOver = false;
+            string filePath= "";
 
-            System.Console.WriteLine("File path: ");
-            filePath = System.Console.ReadLine();
-            isValidFile = FileValidator.CheckFileExists(filePath);
 
-            if ( isValidFile)
+            do
             {
-                this.filePath = filePath;
-                return;
-            }
-            else
-            {
-                System.Console.WriteLine();
-                System.Console.WriteLine($"[Error]");
-                System.Console.WriteLine("File does not exist");
-                if (! this.AskYesNo("Try another file? "))
+                System.Console.WriteLine("File path: ");
+                string response = System.Console.ReadLine();
+                isExistingFile = FileValidator.CheckFileExists(response);
+
+                if (isExistingFile)
                 {
-                    this.StopApplication();
-                }
-                this.AskFilePath();
-            }
-        }
-        private void AskExtension()
-        {
-            bool isMatchingExtension;
-            string fileExtension;
-
-            System.Console.WriteLine("Select extension: ");
-            System.Console.WriteLine("(1) TXT [.txt]");
-            System.Console.WriteLine("(2) XML [.xml]");
-            string response = System.Console.ReadLine();
-
-            switch (response)
-            {
-                case "1":
-                    fileExtension = ".txt";
+                    filePath = response;
                     break;
-                case "2":
-                    fileExtension = ".xml";
-                    break;
-                default:
-                    System.Console.WriteLine();
-                    System.Console.WriteLine("[Error]");
-                    System.Console.WriteLine("Invalid Choice.");
-                    if (! this.AskYesNo("Choose Again?"))
-                    {
-                        this.StopApplication();
-                    }
-                    this.AskExtension();
-                    return; 
-            }
-            // validate the extension
-            isMatchingExtension = FileValidator.MatchFileFileExtension(this.filePath, fileExtension);
-
-            if (isMatchingExtension)
-            {
-                this.fileExtension = fileExtension;
-                return;
-            }
-            else
-            {   
-                System.Console.WriteLine($"[Error]");
-                if (! isMatchingExtension)
-                {
-                    System.Console.WriteLine($"File type does not match given extension {fileExtension}");
-                }
-                if (! this.AskYesNo("Try again? "))
-                {
-                    this.StopApplication();
-                }
-                if (this.AskYesNo("New file? "))
-                {
-                    this.AskFilePath();
-                }
-                this.AskExtension();
-            }
-        }
-
-        private void AskEncryption()
-        {
-            bool isEncrypted;
-            bool encryptionSupported;
-
-            isEncrypted = this.AskYesNo("File encrypted?");
-            
-            if (! isEncrypted)
-            {
-                this.isEncrypted = isEncrypted;
-                return;
-            }
-            // check if encrypted files are allowed for the given extension
-            encryptionSupported = FileValidator.CheckEncryptionSupported(this.fileExtension);
-
-            if (encryptionSupported)
-            {
-                this.isEncrypted = isEncrypted;
-                return;
-            }
-            else
-            {
-                System.Console.WriteLine("[ERROR]");
-                System.Console.WriteLine($"Encryption not supported for file of type ({this.fileExtension}).");
-                if (this.AskYesNo("Continue without encryption?"))
-                {
-                    this.isEncrypted = false;
-                }
-                else if (this.AskYesNo("New file?"))
-                {
-                    this.SetUserInput();
                 }
                 else
                 {
-                    this.StopApplication();
+                    tryAgain = this.AskErrorTryAgain("File does not exist.");
+                    if (! tryAgain)
+                    {
+                        startOver = this.AskStartOver();
+                        if (startOver)
+                        {
+                            this.startOver = true;
+                            return filePath;
+                        }
+                        else
+                        {
+                            this.StopApplication();
+                        }
+                    }
                 }
-            }
+                
+            } while (tryAgain);
+            return filePath;
         }
+        private FileExtension AskExtension(string filePath)
+        {
+            FileExtension extension;
+            bool tryAgain = false;
+            bool startOver = false;
+            bool isMatchingExtension = false;
+            bool isValidExtension = false;
+
+            do
+            {   
+                tryAgain = false;
+                System.Console.WriteLine("Select extension: ");
+                foreach (FileExtension option in Enum.GetValues(typeof(FileExtension)))
+                {
+                    System.Console.WriteLine($"({ (int)option }) { option }");
+                }
+                string response = System.Console.ReadLine();
+                Enum.TryParse(response, out extension);
+
+                isValidExtension = FileValidator.IsValidFileExtension(extension);
+                if (! isValidExtension)
+                {
+                    tryAgain = this.AskErrorTryAgain("Unrecognized file extension.");
+                    if (tryAgain)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        startOver = this.AskStartOver();
+                        if (startOver)
+                        {
+                            this.startOver = true;
+                            return extension;
+                        }
+                        else
+                        {
+                            this.StopApplication();
+                        }
+                    }
+                }
+
+                isMatchingExtension = FileValidator.MatchFileFileExtension(filePath, extension);
+                if (isMatchingExtension)
+                {
+                    break;
+                }
+                else
+                {
+                    tryAgain = this.AskErrorTryAgain("File extension does not match file.");
+                    if (tryAgain)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        startOver = this.AskStartOver();
+                        if (startOver)
+                        {
+                            this.startOver = true;
+                            return extension;
+                        }
+                        else
+                        {
+                            this.StopApplication();
+                        }
+                    }
+                }
+
+            } while (tryAgain);
+            return extension;
+        }
+        private bool AskEncryption(FileExtension fileExtension)
+        {
+
+            bool isEncrypted = false;
+            bool encryptionSupported = false;
+            bool tryAgain = false;
+            bool startOver = false;
+
+            do
+            {
+                tryAgain = false;
+                isEncrypted = this.AskYesNo("File encrypted?");
+                if (!isEncrypted)
+                {
+                    break;
+                }
+                else
+                {
+                    encryptionSupported = FileValidator.CheckEncryptionSupported(fileExtension);
+                    if (encryptionSupported)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        tryAgain = this.AskErrorTryAgain($"Encryption not supported for files of type {fileExtension}");
+                        if (tryAgain)
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            startOver = this.AskStartOver();
+                            if (startOver)
+                            {
+                                this.startOver = true;
+                                return isEncrypted;
+                            }
+                            else
+                            {
+                                this.StopApplication();
+                            }
+                        }
+                    }
+                }
+            } while (tryAgain);
+            return isEncrypted;
+        }
+        private void PrintError(string errorMessage)
+        {
+            System.Console.WriteLine("[ERROR]");
+            System.Console.WriteLine(errorMessage);
+        }
+        private bool AskStartOver()
+        {
+            return this.AskYesNo("Start over?");
+        }
+        private bool AskTryAgain()
+        {
+            return this.AskYesNo("Try again");
+        }
+        private bool AskErrorStartOver(string errorMessage)
+        {
+            this.PrintError(errorMessage);
+            return this.AskStartOver();
+        }
+        private bool AskErrorTryAgain(string errorMessage)
+        {
+            this.PrintError(errorMessage);
+            return this.AskTryAgain();
+        }
+
         private bool AskYesNo(string question)
         {
             System.Console.WriteLine(question + " (y/n)");

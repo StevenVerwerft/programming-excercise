@@ -7,9 +7,11 @@ namespace fileReaderUI
     {
         static void Main(string[] args)
         {
+            
+            DecryptorFactory decryptorFactory = new DecryptorFactory();
+            IDecryptor ApplicationDecryptor = decryptorFactory.CreateDecryptor();
 
             UI UserInterface = new UI();
-            IDecryptor ApplicationDecryptor = new ReverseDecryptor();
             bool readAnotherFile = false;
             do
             {   

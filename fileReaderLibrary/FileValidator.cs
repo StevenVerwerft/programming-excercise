@@ -1,20 +1,24 @@
 using System;
 using System.Collections.Generic;
+using fileReaderLibrary.Enums;
 
 namespace fileReaderLibrary
 {
     public class FileValidator
-    {
-        public static List<string> ValidFileExtensions = new List<string> {".txt", ".xml"};
-        public static List<string> EncryptedFileExtensions = new List<string> {".txt"};
-        public static bool CheckTypeSupported(string fileExtension)
-        {
-            return ValidFileExtensions.Contains(fileExtension);
-        }
-        public static bool CheckEncryptionSupported(string fileExtension)
+
+    {   
+        public static List<FileExtension> EncryptedFileExtensions = new List<FileExtension> {FileExtension.TXT};
+        public static bool CheckEncryptionSupported(FileExtension fileExtension)
         {
             return EncryptedFileExtensions.Contains(fileExtension);
         }
+        private static Dictionary<FileExtension, string> FileExtensionToString = new Dictionary<FileExtension, string>()
+
+        {
+            {FileExtension.TXT, ".txt"},
+            {FileExtension.XML, ".xml"},
+        };
+
         public static bool CheckFileExists(string fileName)
         {
             return System.IO.File.Exists(fileName);
@@ -22,6 +26,16 @@ namespace fileReaderLibrary
         public static bool MatchFileFileExtension(string fileName, string fileExtension)
         {
             return System.IO.Path.GetExtension(fileName) == fileExtension;
+        }
+
+        public static bool IsValidFileExtension(FileExtension fileExtension)
+        {
+            return Enum.IsDefined(typeof(FileExtension), fileExtension);
+        }
+        public static bool MatchFileFileExtension(string fileName, FileExtension fileExtension)
+        {
+            string extension = System.IO.Path.GetExtension(fileName);
+            return (FileExtensionToString[fileExtension] == extension);
         }
     }
 }

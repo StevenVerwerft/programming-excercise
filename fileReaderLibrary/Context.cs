@@ -1,4 +1,5 @@
 using System;
+using fileReaderLibrary.Enums;
 
 namespace fileReaderLibrary
 {
@@ -7,7 +8,8 @@ namespace fileReaderLibrary
         public File File { get; set; }
         public IDecryptor ApplicationDecryptor { get; set; }
 
-        public Context(string fileName, string fileExtension, bool isEncrypted)
+        public Context(string fileName, FileExtension fileExtension, bool isEncrypted)
+
         {
             this.File = new File(fileName, fileExtension, isEncrypted);
         }
