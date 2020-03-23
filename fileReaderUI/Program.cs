@@ -7,32 +7,27 @@ namespace fileReaderUI
     {
         static void Main(string[] args)
         {
+            
+            DecryptorFactory decryptorFactory = new DecryptorFactory();
+            IDecryptor applicationDecryptor = decryptorFactory.CreateDecryptor();
 
-            // decryptor to use - can be replaced with more advanced decryptor
-            IDecryptor ApplicationDecryptor = new ReverseDecryptor();
+            AuthorizerFactory authorizerFactory = new AuthorizerFactory();
+            IAuthorizer applicationAuthorizer = authorizerFactory.CreateAuthorizer();
 
-            // authorizer to use - grants read access to the available roles
-            IAuthorizer ApplicationAuthorizer = new SimpleAuthorizer();
+            Context applicationContext = new Context(applicationDecryptor, applicationAuthorizer);
+            UI userInterface = new UI();
 
-            // container for user input and available decryptor and authorizer
-            Context ApplicationContext = new Context(ApplicationDecryptor, ApplicationAuthorizer);
-
-            // user interface - puts user input into context
-            // contains most of file validation: 
-            // (valid file - valid & matching extension - decryption supported - role security supported - access right for role)
-            UI UserInterface = new UI(ApplicationContext);
-    
             bool readAnotherFile = false;
             do
             {   
-                UserInterface.AddUserInfoToContext();
+                applicationContext = userInterface.AddUserInfoToContext(applicationContext);
 
                 // handles opening file and displaying content to the console
-                FileReader ApplicationFileReader = new FileReader(ApplicationContext);
+                FileReader ApplicationFileReader = new FileReader(applicationContext);
                 ApplicationFileReader.DisplayContent();
 
                 // ask user if application should read another file
-                readAnotherFile = UserInterface.AskReadAnotherFile();
+                readAnotherFile = userInterface.AskReadAnotherFile();
             
             } while (readAnotherFile);
 
