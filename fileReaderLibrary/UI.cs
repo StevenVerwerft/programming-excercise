@@ -1,103 +1,168 @@
 using System;
 using System.Collections.Generic;
-
+using fileReaderLibrary.Enums;
 namespace fileReaderLibrary
 {
     public class UI
     {
-        private string filePath;
-        private string fileExtension;
+        private bool startOver;
         public Context AskUserInput()
         {
-            this.AskFilePath();  // sets and validates filePath
-            this.AskExtension();  // sets and validates fileExtension
+            string filePath = "";
+            FileExtension fileExtension = 0;
 
-            return new Context(this.filePath, this.fileExtension);
+            do
+            {
+                this.startOver = false;
+                filePath = this.AskFilePath();
+                if (this.startOver)
+                {
+                    continue;
+                }
+                fileExtension = this.AskExtension(filePath);
+
+            } while (this.startOver);
+
+            return new Context(filePath, fileExtension);
         }
         public bool AskReadAnotherFile()
         {
             return this.AskYesNo("Read another file?");
         }
-        private void AskFilePath()
+        private string AskFilePath()
         {
-            bool isValidFile;
-            string filePath;
+            bool isExistingFile = false;
+            bool tryAgain = false;
+            bool startOver = false;
+            string filePath= "";
 
-            System.Console.WriteLine("File path: ");
-            filePath = System.Console.ReadLine();
-            isValidFile = FileValidator.CheckFileExists(filePath);
 
-            if ( isValidFile)
+            do
             {
-                this.filePath = filePath;
-                return;
-            }
-            else
-            {
-                System.Console.WriteLine();
-                System.Console.WriteLine($"[Error]");
-                System.Console.WriteLine("File does not exist");
-                if (! this.AskYesNo("Try another file? "))
+                System.Console.WriteLine("File path: ");
+                string response = System.Console.ReadLine();
+                isExistingFile = FileValidator.CheckFileExists(response);
+
+                if (isExistingFile)
                 {
-                    this.StopApplication();
+                    filePath = response;
+                    break;
                 }
-                this.AskFilePath();
-            }
-        }
-        private void AskExtension()
-        {
-            bool isMatchingExtension;
-            string fileExtension;
-
-            System.Console.WriteLine("Select extension: ");
-            System.Console.WriteLine("(1) TXT [.txt]");
-            System.Console.WriteLine("(2) XML [.xml]");
-            string response = System.Console.ReadLine();
-
-            switch (response)
-            {
-                case "1":
-                    fileExtension = ".txt";
-                    break;
-                case "2":
-                    fileExtension = ".xml";
-                    break;
-                default:
-                    System.Console.WriteLine();
-                    System.Console.WriteLine("[Error]");
-                    System.Console.WriteLine("Invalid Choice.");
-                    if (! this.AskYesNo("Choose Again?"))
+                else
+                {
+                    tryAgain = this.AskErrorTryAgain("File does not exist.");
+                    if (! tryAgain)
                     {
-                        this.StopApplication();
+                        startOver = this.AskStartOver();
+                        if (startOver)
+                        {
+                            this.startOver = true;
+                            return filePath;
+                        }
+                        else
+                        {
+                            this.StopApplication();
+                        }
                     }
-                    this.AskExtension();
-                    return; 
-            }
-            // validate the extension
-            isMatchingExtension = FileValidator.MatchFileFileExtension(this.filePath, fileExtension);
+                }
+                
+            } while (tryAgain);
+            return filePath;
+        }
+        private FileExtension AskExtension(string filePath)
+        {
+            FileExtension extension;
+            bool tryAgain = false;
+            bool startOver = false;
+            bool isMatchingExtension = false;
+            bool isValidExtension = false;
 
-            if (isMatchingExtension)
-            {
-                this.fileExtension = fileExtension;
-                return;
-            }
-            else
+            do
             {   
-                System.Console.WriteLine($"[Error]");
-                if (! isMatchingExtension)
+                tryAgain = false;
+                System.Console.WriteLine("Select extension: ");
+                foreach (FileExtension option in Enum.GetValues(typeof(FileExtension)))
                 {
-                    System.Console.WriteLine($"File type does not match given extension {fileExtension}");
+                    System.Console.WriteLine($"({ (int)option }) { option }");
                 }
-                if (! this.AskYesNo("Try again? "))
+                string response = System.Console.ReadLine();
+                Enum.TryParse(response, out extension);
+
+                isValidExtension = FileValidator.IsValidFileExtension(extension);
+                if (! isValidExtension)
                 {
-                    this.StopApplication();
+                    tryAgain = this.AskErrorTryAgain("Unrecognized file extension.");
+                    if (tryAgain)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        startOver = this.AskStartOver();
+                        if (startOver)
+                        {
+                            this.startOver = true;
+                            return extension;
+                        }
+                        else
+                        {
+                            this.StopApplication();
+                        }
+                    }
                 }
-                if (this.AskYesNo("New file? "))
+
+                isMatchingExtension = FileValidator.MatchFileFileExtension(filePath, extension);
+                if (isMatchingExtension)
                 {
-                    this.AskFilePath();
+                    break;
                 }
-                this.AskExtension();
-            }
+                else
+                {
+                    tryAgain = this.AskErrorTryAgain("File extension does not match file.");
+                    if (tryAgain)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        startOver = this.AskStartOver();
+                        if (startOver)
+                        {
+                            this.startOver = true;
+                            return extension;
+                        }
+                        else
+                        {
+                            this.StopApplication();
+                        }
+                    }
+                }
+
+            } while (tryAgain);
+            return extension;
+        }
+        private void PrintError(string errorMessage)
+        {
+            System.Console.WriteLine("[ERROR]");
+            System.Console.WriteLine(errorMessage);
+        }
+        private bool AskStartOver()
+        {
+            return this.AskYesNo("Start over?");
+        }
+        private bool AskTryAgain()
+        {
+            return this.AskYesNo("Try again");
+        }
+        private bool AskErrorStartOver(string errorMessage)
+        {
+            this.PrintError(errorMessage);
+            return this.AskStartOver();
+        }
+        private bool AskErrorTryAgain(string errorMessage)
+        {
+            this.PrintError(errorMessage);
+            return this.AskTryAgain();
         }
         private bool AskYesNo(string question)
         {
