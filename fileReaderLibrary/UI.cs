@@ -1,284 +1,399 @@
 using System;
 using System.Collections.Generic;
-
+using fileReaderLibrary.Enums;
 namespace fileReaderLibrary
 {
     public class UI
     {
-        private string filePath;
-        private string fileExtension;
-        private bool isEncrypted;
-        private bool isRoleSecured;
-        private IRole Role;
-        private Context applicationContext;
 
-        public UI(Context applicationContext)
+        private bool startOver;
+        public Context AddUserInfoToContext(Context applicationContext)
         {
-            this.applicationContext = applicationContext;
-        }
-        public void AddUserInfoToContext()
-        {
-            this.SetUserInput();
-            File currentFile = new File(this.filePath, this.fileExtension, this.isEncrypted, this.isRoleSecured);
-            this.applicationContext.File = currentFile;
-            if (this.isRoleSecured)
+            string filePath = null;
+            FileExtension fileExtension = 0;
+            bool isEncrypted = false;
+            bool isRoleSecured = false;
+            IRole role = null;
+            File file = null;
+            do
             {
-                this.applicationContext.Role = this.Role;
-            }
-        }
-        private void SetUserInput()
-        {
-            this.AskFilePath();  // sets and validates filePath
-            this.AskExtension();  // sets and validates fileExtension
-            this.AskEncryption();  // sets and validates isEncrypted
-            this.AskRoleBasedSecurity(); // sets and validates isRoleSecured
-            this.AskRole(); // sets and validates Role
+                this.startOver = false;
+
+                filePath = this.AskFilePath();
+                if (this.startOver) continue;
+
+                fileExtension = this.AskExtension(filePath);
+                if (this.startOver) continue;
+
+                isEncrypted = this.AskEncryption(fileExtension);
+                if (this.startOver) continue;
+
+                isRoleSecured = this.AskRoleBasedSecurity(fileExtension);
+                if (this.startOver) continue;
+
+                file = new File(filePath, fileExtension, isEncrypted, isRoleSecured);
+                role = this.AskRole(applicationContext.ApplicationAuthorizer, file);
+                if (this.startOver) continue;
+
+
+            } while (this.startOver);
+
+            applicationContext.File = file;
+            applicationContext.Role = role;
+
+            return applicationContext;
         }
         public bool AskReadAnotherFile()
         {
             return this.AskYesNo("Read another file?");
         }
-        private void AskFilePath()
+        private string AskFilePath()
         {
-            bool isValidFile;
-            string filePath;
+            bool isExistingFile = false;
+            bool tryAgain = false;
+            bool startOver = false;
+            string filePath= null;
 
-            System.Console.WriteLine("File path: ");
-            filePath = System.Console.ReadLine();
-            isValidFile = FileValidator.CheckFileExists(filePath);
 
-            if ( isValidFile)
+            do
             {
-                this.filePath = filePath;
-                return;
-            }
-            else
-            {
-                System.Console.WriteLine();
-                System.Console.WriteLine($"[Error]");
-                System.Console.WriteLine("File does not exist");
-                if (! this.AskYesNo("Try another file? "))
+                System.Console.WriteLine("File path: ");
+                string response = System.Console.ReadLine();
+                isExistingFile = FileValidator.CheckFileExists(response);
+
+                if (isExistingFile)
                 {
-                    this.StopApplication();
-                }
-                this.AskFilePath();
-            }
-        }
-        private void AskExtension()
-        {
-            bool isMatchingExtension;
-            string fileExtension;
-
-            System.Console.WriteLine("Select extension: ");
-            System.Console.WriteLine("(1) TXT [.txt]");
-            System.Console.WriteLine("(2) XML [.xml]");
-            System.Console.WriteLine("(3) JSON [.json]");
-            string response = System.Console.ReadLine();
-
-            switch (response)
-            {
-                case "1":
-                    fileExtension = ".txt";
+                    filePath = response;
                     break;
-                case "2":
-                    fileExtension = ".xml";
-                    break;
-                case "3":
-                    fileExtension = ".json";
-                    break;
-                default:
-                    System.Console.WriteLine();
-                    System.Console.WriteLine("[Error]");
-                    System.Console.WriteLine("Invalid Choice.");
-                    if (! this.AskYesNo("Choose Again?"))
-                    {
-                        this.StopApplication();
-                    }
-                    this.AskExtension();
-                    return; 
-            }
-            // validate the extension
-            isMatchingExtension = FileValidator.MatchFileFileExtension(this.filePath, fileExtension);
-
-            if (isMatchingExtension)
-            {
-                this.fileExtension = fileExtension;
-                return;
-            }
-            else
-            {   
-                System.Console.WriteLine($"[Error]");
-                if (! isMatchingExtension)
-                {
-                    System.Console.WriteLine($"File type does not match given extension {fileExtension}");
-                }
-                if (! this.AskYesNo("Try again? "))
-                {
-                    this.StopApplication();
-                }
-                if (this.AskYesNo("New file? "))
-                {
-                    this.AskFilePath();
-                }
-                this.AskExtension();
-            }
-        }
-
-        private void AskEncryption()
-        {
-            bool isEncrypted;
-            bool encryptionSupported;
-
-            isEncrypted = this.AskYesNo("File encrypted?");
-            
-            if (! isEncrypted)
-            {
-                this.isEncrypted = isEncrypted;
-                return;
-            }
-            // check if encrypted files are allowed for the given extension
-            encryptionSupported = FileValidator.CheckEncryptionSupported(this.fileExtension);
-
-            if (encryptionSupported)
-            {
-                this.isEncrypted = isEncrypted;
-                return;
-            }
-            else
-            {
-                System.Console.WriteLine("[ERROR]");
-                System.Console.WriteLine($"Encryption not supported for file of type ({this.fileExtension}).");
-                if (this.AskYesNo("Continue without encryption?"))
-                {
-                    this.isEncrypted = false;
-                }
-                else if (this.AskYesNo("New file?"))
-                {
-                    this.SetUserInput();
                 }
                 else
                 {
-                    this.StopApplication();
+                    tryAgain = this.AskErrorTryAgain("File does not exist.");
+                    if (! tryAgain)
+                    {
+                        startOver = this.AskStartOver();
+                        if (startOver)
+                        {
+                            this.startOver = true;
+                            return filePath;
+                        }
+                        else
+                        {
+                            this.StopApplication();
+                        }
+                    }
                 }
-            }
+                
+            } while (tryAgain);
+            return filePath;
         }
-
-        private void AskRoleBasedSecurity()
+        private FileExtension AskExtension(string filePath)
         {
-            bool isRoleSecured = this.AskYesNo("Use role based security?");
-            if (! isRoleSecured )
-            {
-                this.isRoleSecured = false;
-                return;
-            }
-            bool roleBasedSecuritySupported = FileValidator.CheckRoleBasedSecuritySupported(this.fileExtension);
-            if ( roleBasedSecuritySupported)
-            {
-                this.isRoleSecured = true;
-                return;
-            }
-            else
-            {
-                System.Console.WriteLine($"Role based security is not allowed for the file type {this.fileExtension}.");
-                this.AskStartOver();
-            }
-        }
+            FileExtension extension;
+            bool tryAgain = false;
+            bool startOver = false;
+            bool isMatchingExtension = false;
+            bool isValidExtension = false;
 
-        private void AskRole()
-        {
-            IRole role;
-
-            if (! this.isRoleSecured)
-            {
-                return;
-            }
-
-            System.Console.WriteLine("choose a role:");
-            int i = 0;
-            foreach (IRole accessRole in this.applicationContext.ApplicationAuthorizer.AvailableRoles)
-            {
-                System.Console.WriteLine($"({i + 1}) {accessRole.RoleName}");
-                i++;
-            }
-            try
-            {
+            do
+            {   
+                tryAgain = false;
+                System.Console.WriteLine("Select extension: ");
+                foreach (FileExtension option in Enum.GetValues(typeof(FileExtension)))
+                {
+                    System.Console.WriteLine($"({ (int)option }) { option }");
+                }
                 string response = System.Console.ReadLine();
-                int roleID = Int16.Parse(response);
-                role = this.applicationContext.ApplicationAuthorizer.AvailableRoles[roleID - 1];
-                this.Role = role;
-            }
-            catch (System.Exception)
-            {
-                System.Console.WriteLine("[ERROR]");
-                System.Console.WriteLine($"Invalid response");
-                if (this.AskTryAgain())  // stops application of answer is no
-                {
-                    this.AskRole();
-                }
-            }
+                Enum.TryParse(response, out extension);
 
-            // check if the role has access to the file
-            if(! this.CheckRoleAccess())
-            {
-                System.Console.WriteLine("[ERROR]");
-                System.Console.WriteLine($"Access denied for role {this.Role.RoleName}");
-                if (this.AskTryAgain())
+                isValidExtension = FileValidator.IsValidFileExtension(extension);
+                if (! isValidExtension)
                 {
-                    this.AskRole();
+                    tryAgain = this.AskErrorTryAgain("Unrecognized file extension.");
+                    if (tryAgain)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        startOver = this.AskStartOver();
+                        if (startOver)
+                        {
+                            this.startOver = true;
+                            return extension;
+                        }
+                        else
+                        {
+                            this.StopApplication();
+                        }
+                    }
                 }
-            }   
+
+                isMatchingExtension = FileValidator.MatchFileFileExtension(filePath, extension);
+                if (isMatchingExtension)
+                {
+                    break;
+                }
+                else
+                {
+                    tryAgain = this.AskErrorTryAgain("File extension does not match file.");
+                    if (tryAgain)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        startOver = this.AskStartOver();
+                        if (startOver)
+                        {
+                            this.startOver = true;
+                            return extension;
+                        }
+                        else
+                        {
+                            this.StopApplication();
+                        }
+                    }
+                }
+
+            } while (tryAgain);
+            return extension;
+        }
+        private bool AskEncryption(FileExtension fileExtension)
+        {
+
+            bool isEncrypted = false;
+            bool encryptionSupported = false;
+            bool tryAgain = false;
+            bool startOver = false;
+
+            do
+            {
+                tryAgain = false;
+                isEncrypted = this.AskYesNo("File encrypted?");
+                if (!isEncrypted)
+                {
+                    break;
+                }
+                else
+                {
+                    encryptionSupported = FileValidator.CheckEncryptionSupported(fileExtension);
+                    if (encryptionSupported)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        tryAgain = this.AskErrorTryAgain($"Encryption not supported for files of type {fileExtension}");
+                        if (tryAgain)
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            startOver = this.AskStartOver();
+                            if (startOver)
+                            {
+                                this.startOver = true;
+                                return isEncrypted;
+                            }
+                            else
+                            {
+                                this.StopApplication();
+                            }
+                        }
+                    }
+                }
+            } while (tryAgain);
+            return isEncrypted;
         }
 
-        private bool CheckRoleAccess()
+        private bool AskRoleBasedSecurity(FileExtension fileExtension)
+        {   
+            bool isRoleSecured = false;
+            bool roleBaseSecuritySupported = false;
+            bool tryAgain = false;
+            bool startOver = false;
+
+            do
+            {
+                tryAgain = false;
+                isRoleSecured = this.AskYesNo("Use role base security?");
+                if (isRoleSecured)
+                {
+                    roleBaseSecuritySupported = FileValidator.CheckRoleBasedSecuritySupported(fileExtension);
+                    if (roleBaseSecuritySupported)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        tryAgain = this.AskErrorTryAgain($"Role base security not supported for files of type {fileExtension}");
+                        if (tryAgain)
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            startOver = this.AskStartOver();
+                            if (startOver)
+                            {
+                                this.startOver = true;
+                                return isRoleSecured;
+                            }
+                        }
+                    }
+                }
+            } while (tryAgain);
+            return isRoleSecured;
+        }
+
+        private IRole AskRole(IAuthorizer authorizer, File file)
+        {   
+            bool tryAgain = false;
+            bool startOver = false;
+            bool roleHasAccess = false;
+            bool isValidRole = false;
+            IRole role = null;
+
+            if (! file.IsRoleBaseSecured)
+            {
+                return null;
+            }
+            do
+            {
+                System.Console.WriteLine("Choose a role:");
+                int i = 0;
+                foreach (IRole accessRole in authorizer.AvailableRoles)
+                {
+                    System.Console.WriteLine($"({i + 1}) {accessRole.RoleName}");
+                    i++;
+                }
+                string response = System.Console.ReadLine();
+                short roleID;
+                Int16.TryParse(response, out roleID);
+                roleID -= 1;  // index in list container start at 0
+                isValidRole = FileValidator.IsValidRole(authorizer, roleID);
+
+                if (isValidRole)
+                {
+                    role = authorizer.AvailableRoles[roleID];
+                    roleHasAccess = authorizer.HasReadAccess(file.FileName, role);
+                    if (roleHasAccess)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        tryAgain = this.AskErrorTryAgain($"{role.RoleName} does not have read access to file {file.FileName}.");
+                        if (tryAgain)
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            startOver = this.AskStartOver();
+                            if (startOver)
+                            {
+                                this.startOver = true;
+                                return null;
+                            }
+                            else
+                            {
+                                this.StopApplication();
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    tryAgain = this.AskErrorTryAgain($"Unknown role chosen.");
+                    if (tryAgain)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        startOver = this.AskStartOver();
+                        if (startOver)
+                        {
+                            this.startOver = true;
+                            return null;
+                        }
+                        else
+                        {
+                            this.StopApplication();
+                        }
+                    }
+                }
+  
+
+            } while (tryAgain);
+            return role;
+        }
+        private bool CheckRoleAccess(Context applicationContext, File file, IRole role)
         {
-            return this.applicationContext.ApplicationAuthorizer.HasReadAccess(this.filePath, this.Role);
+            return applicationContext.ApplicationAuthorizer.HasReadAccess(file.FileName, role);
         }
         private bool AskYesNo(string question)
         {
-            System.Console.WriteLine(question + " (y/n)");
-            string response = System.Console.ReadLine().ToLower().Trim();
-
-            bool isYes = (response == "y" | response == "yes");
-            bool isNo = (response == "n" | response == "no");
-            if (! (isYes | isNo))
+            bool tryAgain = false;
+            bool isYes = false;
+            bool isNo = false;
+            do
             {
-                System.Console.WriteLine("Unrecognized response.");
-                System.Console.WriteLine("Closing application...");
-                this.StopApplication();
-            }
-            return (response == "y" | response == "yes");
+                tryAgain = false;
+                System.Console.WriteLine(question + " (y/n)");
+                string response = System.Console.ReadLine().ToLower().Trim();
+
+                isYes = (response == "y" | response == "yes");
+                isNo = (response == "n" | response == "no");
+                
+                if (! (isYes | isNo))
+                {
+                    tryAgain = this.AskErrorTryAgain("Unrecognized response.");
+                    if (tryAgain)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        this.StopApplication();
+                    }
+                }
+                else
+                {
+                    break;
+                }
+            } while (tryAgain);
+            return isYes;
+        }
+        private bool AskStartOver()
+        {
+            return this.AskYesNo("Start over?");
+        }
+        private bool AskTryAgain()
+        {
+            return this.AskYesNo("Try again");
+        }
+        private void PrintError(string errorMessage)
+        {
+            System.Console.WriteLine("[ERROR]");
+            System.Console.WriteLine(errorMessage);
+        }
+        private bool AskErrorStartOver(string errorMessage)
+        {
+            this.PrintError(errorMessage);
+            return this.AskStartOver();
+        }
+        private bool AskErrorTryAgain(string errorMessage)
+        {
+            this.PrintError(errorMessage);
+            return this.AskTryAgain();
         }
         private void StopApplication()
         {
             System.Environment.Exit(1);
-        }
-
-        private bool AskTryAgain()
-        {
-            
-            if( this.AskYesNo("Try Again?"))
-            {
-                return true;
-            }
-            else
-            {
-                this.StopApplication();
-                return false;
-            }
-        }
-
-        private bool AskStartOver()
-        {
-            if( this.AskYesNo("Start over?"))
-            {
-                this.SetUserInput();
-                return true;
-            }
-            else
-            {
-                this.StopApplication();
-                return false;
-            }
         }
     }
 }
