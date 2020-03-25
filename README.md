@@ -1,11 +1,13 @@
 # 3. Programming excercise
 
 ## Usage
-Driver program in fileReaderUI
+Driver program in fileReaderUI.
+
 run: 
 ```
 dotnet run --project fileReaderUI/fileReaderUI.csproj
 ```
+to launch the application.
 
 Program asks for:
 - path to a file
@@ -14,7 +16,7 @@ Program asks for:
 - role base security
 - role (if role base security) 
 
-## supported files
+## Supported files
 
 Program supports files of type .txt, .xml, and .json. Other file types are rejected by the program.
 Dummy files are available for tests:
@@ -22,7 +24,7 @@ Dummy files are available for tests:
 - files/file.xml
 - files/file.json
 
-## encrypted files
+## Encrypted files
 
 Program supports decryption of files. The dummy decryption algorithm reverses the encrypted files.
 Dummy files are available for tests:
@@ -30,12 +32,13 @@ Dummy files are available for tests:
 - files/file_encrypted.xml
 - files/file_encrypted.json
 
-## role base security
+## Role base security
 
 Program supports role base security for granting read access to files.
 Dummy roles available in the program:
 - admin -> can read all files
 - member -> cannot read files containing *admin* in title
+  
 Dummy files are available for tests:
 - files/file_admin.txt
 - files/file_admin.xml
